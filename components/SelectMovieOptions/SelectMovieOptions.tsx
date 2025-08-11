@@ -14,6 +14,7 @@ import {
   Text,
   Textarea,
 } from '@mantine/core';
+import { ClientRateLimiter } from '../../app/lib/utils/api-helpers';
 
 // Movie genres
 const GENRES = [
@@ -51,7 +52,21 @@ interface MovieSearchOptions {
   categories: string[];
 }
 
-export function SelectMovieOptions() {
+interface MovieRecommendation {
+  title: string;
+  year: number;
+  imdb_id: string;
+}
+
+interface SelectMovieOptionsProps {
+  onRecommendationsReceived: (recommendations: MovieRecommendation[]) => void;
+  onRequestMade?: () => void;
+}
+
+export function SelectMovieOptions({
+  onRecommendationsReceived,
+  onRequestMade,
+}: SelectMovieOptionsProps) {
   const [searchOptions, setSearchOptions] = useState<MovieSearchOptions>({
     description: '',
     genres: [],
@@ -85,6 +100,12 @@ export function SelectMovieOptions() {
       return;
     }
 
+    // Check rate limit before making the request
+    if (!ClientRateLimiter.checkLimit()) {
+      setError('Rate limit exceeded. Please try again later.');
+      return;
+    }
+
     setIsLoading(true);
     setError('');
 
@@ -108,8 +129,20 @@ export function SelectMovieOptions() {
       const result = await response.json();
       console.log(result);
 
-      // For now, just show success message
-      console.log('Movie recommendation request submitted successfully');
+      // Check if we have movie recommendations in the response
+      if (result.response && result.response.list && Array.isArray(result.response.list)) {
+        const recommendations: MovieRecommendation[] = result.response.list;
+        console.log('Movie recommendations received:', recommendations);
+        onRecommendationsReceived(recommendations);
+      } else {
+        console.log('No movie recommendations received in response');
+        setError('No movie recommendations received. Please try again.');
+      }
+
+      // Notify parent component that a request was made (this updates the footer)
+      if (onRequestMade) {
+        onRequestMade();
+      }
     } catch (err) {
       console.error('API error:', err);
       setError(err instanceof Error ? err.message : 'Failed to get recommendations');
