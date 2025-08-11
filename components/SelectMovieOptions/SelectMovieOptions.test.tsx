@@ -16,10 +16,10 @@ describe('SelectMovieOptions', () => {
     expect(screen.getByLabelText(/What kind of movies are you looking for/)).toBeInTheDocument();
 
     // Check for genre selection by looking for the label text
-    expect(screen.getByText('Genres (Optional)')).toBeInTheDocument();
+    expect(screen.getByText('Genres')).toBeInTheDocument();
 
     // Check for category selection by looking for the label text
-    expect(screen.getByText('Categories (Optional)')).toBeInTheDocument();
+    expect(screen.getByText('Categories')).toBeInTheDocument();
 
     // Check for submit button
     expect(screen.getByRole('button', { name: /Recommend me some movies/ })).toBeInTheDocument();

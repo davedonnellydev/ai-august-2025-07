@@ -89,11 +89,24 @@ export function SelectMovieOptions() {
     setError('');
 
     try {
-      // TODO: Implement API call for movie recommendations
-      console.log('Search options:', searchOptions);
+      const response = await fetch('/api/openai/responses', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          searchOptions,
+        }),
+      });
 
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.log(errorData);
+        throw new Error(errorData.error || 'API call failed');
+      }
+
+      const result = await response.json();
+      console.log(result);
 
       // For now, just show success message
       console.log('Movie recommendation request submitted successfully');
@@ -244,14 +257,6 @@ export function SelectMovieOptions() {
             )}
           </Stack>
         </Paper>
-
-        {/* Help Text
-        <Paper p="md" radius="md" bg="blue.0" withBorder>
-          <Text size="sm" c="blue.8" ta="center">
-            💡 <strong>Tip:</strong> The more specific you are in your description, the better
-            recommendations you'll get!
-          </Text>
-        </Paper> */}
       </Stack>
     </Container>
   );
