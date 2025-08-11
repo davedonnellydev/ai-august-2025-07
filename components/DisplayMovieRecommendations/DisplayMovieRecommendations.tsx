@@ -1,107 +1,147 @@
 'use client';
 
-import { useState } from 'react';
-import { IconX, IconStar, IconClock, IconCalendar } from '@tabler/icons-react';
+import { useCallback, useEffect, useState } from 'react';
+import { IconArrowLeft, IconCalendar, IconClock, IconStar, IconX } from '@tabler/icons-react';
 import {
-  Container,
-  Grid,
-  Card,
-  Image,
-  Text,
-  Group,
+  ActionIcon,
+  Alert,
   Badge,
   Button,
-  Drawer,
-  Stack,
+  Card,
+  Container,
   Divider,
+  Drawer,
+  Grid,
+  Group,
+  Image,
+  Loader,
   Paper,
-  Title,
   ScrollArea,
-  ActionIcon,
+  Stack,
+  Text,
+  Title,
 } from '@mantine/core';
 import classes from './DisplayMovieRecommendations.module.css';
 
-// Mock data for demonstration - will be replaced with real data later
-const MOCK_MOVIES = [
-  {
-    id: 1,
-    title: 'Guardians of the Galaxy Vol. 2',
-    year: 2017,
-    imdbId: 'tt3896198',
-    poster:
-      'https://m.media-amazon.com/images/M/MV5BNjM0NTc0NzItM2FlYS00YzEwLWE0YmUtNTA2ZWIzODc2OTgxXkEyXkFqcGdeQXVyNTgwNzIyNzg@._V1_SX300.jpg',
-    rating: 7.6,
-    runtime: '136 min',
-    genre: ['Action', 'Adventure', 'Comedy'],
-    plot: "The Guardians struggle to keep together as a team while dealing with their personal family issues, notably Star-Lord's encounter with his father the ambitious celestial being Ego.",
-  },
-  {
-    id: 2,
-    title: 'The Dark Knight',
-    year: 2008,
-    imdbId: 'tt0468569',
-    poster:
-      'https://m.media-amazon.com/images/M/MV5BMTMxNTMwODM0NF5BMl5BanBnXkFtZTcwODAyMTk2Mw@@._V1_SX300.jpg',
-    rating: 9.0,
-    runtime: '152 min',
-    genre: ['Action', 'Crime', 'Drama'],
-    plot: 'When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice.',
-  },
-  {
-    id: 3,
-    title: 'Inception',
-    year: 2010,
-    imdbId: 'tt1375666',
-    poster:
-      'https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_SX300.jpg',
-    rating: 8.8,
-    runtime: '148 min',
-    genre: ['Action', 'Adventure', 'Sci-Fi'],
-    plot: 'A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O.',
-  },
-  {
-    id: 4,
-    title: 'Pulp Fiction',
-    year: 1994,
-    imdbId: 'tt0110912',
-    poster:
-      'https://m.media-amazon.com/images/M/MV5BNGNhMDIzZTUtNTBlZi00MTRlLWFjM2ItYzViMjE3YzI5MjIwXkEyXkFqcGdeQXVyNzkwMjQ5NzM@._V1_SX300.jpg',
-    rating: 8.9,
-    runtime: '154 min',
-    genre: ['Crime', 'Drama'],
-    plot: 'The lives of two mob hitmen, a boxer, a gangster and his wife, and a pair of diner bandits intertwine in four tales of violence and redemption.',
-  },
-  {
-    id: 5,
-    title: 'The Shawshank Redemption',
-    year: 1994,
-    imdbId: 'tt0111161',
-    poster:
-      'https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NmNlLWJiNDMtZDViZWM2MzIxZDYwXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_SX300.jpg',
-    rating: 9.3,
-    runtime: '142 min',
-    genre: ['Drama'],
-    plot: 'Two imprisoned men bond over a number of years, finding solace and eventual redemption through acts of common decency.',
-  },
-];
-
-interface Movie {
-  id: number;
+interface MovieRecommendation {
   title: string;
   year: number;
-  imdbId: string;
-  poster: string;
-  rating: number;
-  runtime: string;
-  genre: string[];
-  plot: string;
+  imdb_id: string;
 }
 
-export function DisplayMovieRecommendations() {
-  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
-  const [drawerOpened, setDrawerOpened] = useState(false);
+interface OMDbMovieData {
+  title: string;
+  year: number;
+  rated: string;
+  released: string;
+  runtime: string;
+  genre: string[];
+  director: string;
+  writer: string;
+  actors: string[];
+  plot: string;
+  poster: string;
+  ratings: Array<{ Source: string; Value: string }>;
+  metascore: number | null;
+  imdbRating: number | null;
+  imdbVotes: number | null;
+  imdbId: string;
+  type: string;
+  boxOffice: string | null;
+  production: string | null;
+}
 
-  const handleMovieSelect = (movie: Movie) => {
+interface DisplayMovieRecommendationsProps {
+  recommendations: MovieRecommendation[];
+  onBack: () => void;
+}
+
+// Cache for OMDb API responses
+const movieCache = new Map<string, OMDbMovieData>();
+
+export function DisplayMovieRecommendations({
+  recommendations,
+  onBack,
+}: DisplayMovieRecommendationsProps) {
+  const [movies, setMovies] = useState<OMDbMovieData[]>([]);
+  const [selectedMovie, setSelectedMovie] = useState<OMDbMovieData | null>(null);
+  const [drawerOpened, setDrawerOpened] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch movie data from OMDb API
+  const fetchMovieData = useCallback(
+    async (recommendation: MovieRecommendation): Promise<OMDbMovieData | null> => {
+      const cacheKey = recommendation.imdb_id || `${recommendation.title}-${recommendation.year}`;
+
+      // Check cache first
+      if (movieCache.has(cacheKey)) {
+        return movieCache.get(cacheKey)!;
+      }
+
+      try {
+        let url: string;
+        if (recommendation.imdb_id) {
+          url = `/api/omdb/movie?i=${recommendation.imdb_id}`;
+        } else {
+          url = `/api/omdb/movie?t=${encodeURIComponent(recommendation.title)}&y=${recommendation.year}`;
+        }
+
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch movie data: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        if (result.success && result.data) {
+          const movieData = result.data;
+          // Cache the result
+          movieCache.set(cacheKey, movieData);
+          return movieData;
+        }
+
+        throw new Error(result.error || 'Failed to fetch movie data');
+      } catch (error) {
+        console.error(`Error fetching movie data for ${recommendation.title}:`, error);
+        return null;
+      }
+    },
+    []
+  );
+
+  // Fetch all movie data
+  const fetchAllMovies = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const moviePromises = recommendations.map(fetchMovieData);
+      const movieResults = await Promise.all(moviePromises);
+
+      // Filter out failed requests
+      const validMovies = movieResults.filter((movie): movie is OMDbMovieData => movie !== null);
+
+      if (validMovies.length === 0) {
+        setError('Failed to fetch movie data. Please try again.');
+      } else {
+        setMovies(validMovies);
+      }
+    } catch (error) {
+      console.error('Error fetching movies:', error);
+      setError('Failed to fetch movie data. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [recommendations, fetchMovieData]);
+
+  // Fetch movies when component mounts or recommendations change
+  useEffect(() => {
+    if (recommendations.length > 0) {
+      fetchAllMovies();
+    }
+  }, [recommendations, fetchAllMovies]);
+
+  const handleMovieSelect = (movie: OMDbMovieData) => {
     setSelectedMovie(movie);
     setDrawerOpened(true);
   };
@@ -111,6 +151,34 @@ export function DisplayMovieRecommendations() {
     setSelectedMovie(null);
   };
 
+  if (isLoading) {
+    return (
+      <Container size="xl" py="xl">
+        <Stack gap="xl" align="center" justify="center" style={{ minHeight: '400px' }}>
+          <Loader size="xl" />
+          <Text size="lg" c="dimmed">
+            Fetching movie recommendations...
+          </Text>
+        </Stack>
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container size="xl" py="xl">
+        <Stack gap="xl" align="center" justify="center" style={{ minHeight: '400px' }}>
+          <Alert title="Error" color="red" variant="light">
+            {error}
+          </Alert>
+          <Button onClick={onBack} leftSection={<IconArrowLeft size={16} />}>
+            Back to Search
+          </Button>
+        </Stack>
+      </Container>
+    );
+  }
+
   return (
     <Container size="xl" py="xl">
       <Stack gap="xl">
@@ -118,23 +186,30 @@ export function DisplayMovieRecommendations() {
         <Paper p="lg" radius="md" bg="blue.0" withBorder>
           <Group justify="space-between" align="center">
             <div>
-              <Title order={2} c="blue.8">
-                🎬 Movie Recommendations
-              </Title>
               <Text c="blue.7" size="sm">
                 Here are your personalized movie suggestions
               </Text>
             </div>
-            <Badge variant="filled" color="blue" size="lg">
-              {MOCK_MOVIES.length} Movies
-            </Badge>
+            <Group gap="md">
+              <Badge variant="filled" color="blue" size="lg">
+                {movies.length} Movies
+              </Badge>
+              <Button
+                variant="light"
+                color="gray"
+                onClick={onBack}
+                leftSection={<IconArrowLeft size={16} />}
+              >
+                Back to Search
+              </Button>
+            </Group>
           </Group>
         </Paper>
 
         {/* Movie Grid */}
         <Grid gutter="md">
-          {MOCK_MOVIES.map((movie) => (
-            <Grid.Col key={movie.id} span={{ base: 12, sm: 6, md: 4, lg: 3 }}>
+          {movies.map((movie) => (
+            <Grid.Col key={movie.imdbId} span={{ base: 12, sm: 6, md: 4, lg: 3 }}>
               <Card
                 shadow="sm"
                 padding="lg"
@@ -145,7 +220,11 @@ export function DisplayMovieRecommendations() {
               >
                 <Card.Section>
                   <Image
-                    src={movie.poster}
+                    src={
+                      movie.poster !== 'N/A'
+                        ? movie.poster
+                        : 'https://placehold.co/300x450/666666/FFFFFF?text=No+Poster'
+                    }
                     height={300}
                     alt={movie.title}
                     fallbackSrc="https://placehold.co/300x450/666666/FFFFFF?text=No+Poster"
@@ -176,10 +255,12 @@ export function DisplayMovieRecommendations() {
                   </Group>
 
                   <Group gap="xs" c="dimmed" className={classes.ratingGroup}>
-                    <Group gap={4}>
-                      <IconStar size={14} fill="gold" />
-                      <Text size="sm">{movie.rating}</Text>
-                    </Group>
+                    {movie.imdbRating && (
+                      <Group gap={4}>
+                        <IconStar size={14} fill="gold" />
+                        <Text size="sm">{movie.imdbRating}</Text>
+                      </Group>
+                    )}
                     <Group gap={4}>
                       <IconClock size={14} />
                       <Text size="sm">{movie.runtime}</Text>
@@ -231,7 +312,11 @@ export function DisplayMovieRecommendations() {
                 {/* Large Poster */}
                 <Paper className={classes.posterContainer}>
                   <Image
-                    src={selectedMovie.poster}
+                    src={
+                      selectedMovie.poster !== 'N/A'
+                        ? selectedMovie.poster
+                        : 'https://placehold.co/400x600/666666/FFFFFF?text=No+Poster'
+                    }
                     height={400}
                     alt={selectedMovie.title}
                     fallbackSrc="https://placehold.co/400x600/666666/FFFFFF?text=No+Poster"
@@ -244,12 +329,14 @@ export function DisplayMovieRecommendations() {
                   <Title order={2}>{selectedMovie.title}</Title>
 
                   <Group gap="lg">
-                    <Group gap={4} className={classes.ratingGroup}>
-                      <IconStar size={20} fill="gold" />
-                      <Text size="lg" fw={600}>
-                        {selectedMovie.rating}/10
-                      </Text>
-                    </Group>
+                    {selectedMovie.imdbRating && (
+                      <Group gap={4} className={classes.ratingGroup}>
+                        <IconStar size={20} fill="gold" />
+                        <Text size="lg" fw={600}>
+                          {selectedMovie.imdbRating}/10
+                        </Text>
+                      </Group>
+                    )}
                     <Group gap={4}>
                       <IconCalendar size={20} />
                       <Text size="lg">{selectedMovie.year}</Text>
@@ -288,54 +375,52 @@ export function DisplayMovieRecommendations() {
 
                 <Divider />
 
-                {/* Additional Details (placeholder for OMDb data) */}
+                {/* Additional Details */}
                 <Stack gap="md">
                   <Title order={3}>Additional Information</Title>
 
                   <Grid gutter="md">
-                    <Grid.Col span={6}>
-                      <Paper className={classes.detailCard}>
-                        <Text size="sm" c="dimmed" mb={4}>
-                          Director
-                        </Text>
-                        <Text size="md">Christopher Nolan</Text>
-                      </Paper>
-                    </Grid.Col>
-                    <Grid.Col span={6}>
-                      <Paper className={classes.detailCard}>
-                        <Text size="sm" c="dimmed" mb={4}>
-                          Writer
-                        </Text>
-                        <Text size="md">Christopher Nolan</Text>
-                      </Paper>
-                    </Grid.Col>
-                    <Grid.Col span={6}>
-                      <Paper className={classes.detailCard}>
-                        <Text size="sm" c="dimmed" mb={4}>
-                          Metascore
-                        </Text>
-                        <Text size="md">74</Text>
-                      </Paper>
-                    </Grid.Col>
-                    <Grid.Col span={6}>
-                      <Paper className={classes.detailCard}>
-                        <Text size="sm" c="dimmed" mb={4}>
-                          Box Office
-                        </Text>
-                        <Text size="md">$836.8M</Text>
-                      </Paper>
-                    </Grid.Col>
+                    {selectedMovie.director && (
+                      <Grid.Col span={6}>
+                        <Paper className={classes.detailCard}>
+                          <Text size="sm" c="dimmed" mb={4}>
+                            Director
+                          </Text>
+                          <Text size="md">{selectedMovie.director}</Text>
+                        </Paper>
+                      </Grid.Col>
+                    )}
+                    {selectedMovie.writer && (
+                      <Grid.Col span={6}>
+                        <Paper className={classes.detailCard}>
+                          <Text size="sm" c="dimmed" mb={4}>
+                            Writer
+                          </Text>
+                          <Text size="md">{selectedMovie.writer}</Text>
+                        </Paper>
+                      </Grid.Col>
+                    )}
+                    {selectedMovie.metascore && (
+                      <Grid.Col span={6}>
+                        <Paper className={classes.detailCard}>
+                          <Text size="sm" c="dimmed" mb={4}>
+                            Metascore
+                          </Text>
+                          <Text size="md">{selectedMovie.metascore}</Text>
+                        </Paper>
+                      </Grid.Col>
+                    )}
+                    {selectedMovie.boxOffice && (
+                      <Grid.Col span={6}>
+                        <Paper className={classes.detailCard}>
+                          <Text size="sm" c="dimmed" mb={4}>
+                            Box Office
+                          </Text>
+                          <Text size="md">{selectedMovie.boxOffice}</Text>
+                        </Paper>
+                      </Grid.Col>
+                    )}
                   </Grid>
-                </Stack>
-
-                {/* Action Buttons */}
-                <Stack gap="md">
-                  <Button variant="filled" color="blue" size="lg" fullWidth>
-                    Add to Watchlist
-                  </Button>
-                  <Button variant="light" color="gray" size="md" fullWidth>
-                    Share Movie
-                  </Button>
                 </Stack>
               </Stack>
             </ScrollArea>

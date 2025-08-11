@@ -226,9 +226,52 @@ setInterval(() => ServerRateLimiter.cleanup(), 5 * 60 * 1000);
 
 // Client-side Rate Limiter
 export class ClientRateLimiter {
+  private static STORAGE_KEY = 'movie_recommendation_requests';
+
+  private static isClient(): boolean {
+    return typeof window !== 'undefined' && typeof localStorage !== 'undefined';
+  }
+
+  private static safeGetItem(key: string): string | null {
+    if (!this.isClient()) {
+      return null;
+    }
+    try {
+      return localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  }
+
+  private static safeSetItem(key: string, value: string): void {
+    if (!this.isClient()) {
+      return;
+    }
+    try {
+      localStorage.setItem(key, value);
+    } catch {
+      // Silently fail if localStorage is not available
+    }
+  }
+
+  private static safeRemoveItem(key: string): void {
+    if (!this.isClient()) {
+      return;
+    }
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      // Silently fail if localStorage is not available
+    }
+  }
+
   static checkLimit(): boolean {
+    if (!this.isClient()) {
+      return true; // Allow on server-side
+    }
+
     const now = Date.now();
-    const requests = JSON.parse(localStorage.getItem('translation_requests') || '[]');
+    const requests = JSON.parse(this.safeGetItem(this.STORAGE_KEY) || '[]');
 
     // Remove old requests outside the window
     const validRequests = requests.filter(
@@ -241,18 +284,58 @@ export class ClientRateLimiter {
 
     // Add current request
     validRequests.push(now);
-    localStorage.setItem('translation_requests', JSON.stringify(validRequests));
+    this.safeSetItem(this.STORAGE_KEY, JSON.stringify(validRequests));
 
     return true;
   }
 
   static getRemainingRequests(): number {
+    if (!this.isClient()) {
+      return MAX_REQUESTS; // Return max on server-side
+    }
+
     const now = Date.now();
-    const requests = JSON.parse(localStorage.getItem('translation_requests') || '[]');
+    const requests = JSON.parse(this.safeGetItem(this.STORAGE_KEY) || '[]');
     const validRequests = requests.filter(
       (timestamp: number) => now - timestamp < STORAGE_WINDOW_MS
     );
 
     return Math.max(0, MAX_REQUESTS - validRequests.length);
+  }
+
+  static getCurrentCount(): number {
+    if (!this.isClient()) {
+      return 0; // Return 0 on server-side
+    }
+
+    const now = Date.now();
+    const requests = JSON.parse(this.safeGetItem(this.STORAGE_KEY) || '[]');
+    const validRequests = requests.filter(
+      (timestamp: number) => now - timestamp < STORAGE_WINDOW_MS
+    );
+
+    return validRequests.length;
+  }
+
+  static decrementRequests(): void {
+    if (!this.isClient()) {
+      return; // No-op on server-side
+    }
+
+    const now = Date.now();
+    const requests = JSON.parse(this.safeGetItem(this.STORAGE_KEY) || '[]');
+
+    // Remove old requests outside the window
+    const validRequests = requests.filter(
+      (timestamp: number) => now - timestamp < STORAGE_WINDOW_MS
+    );
+
+    // Add current request to increment the count (this decrements remaining)
+    validRequests.push(now);
+    this.safeSetItem(this.STORAGE_KEY, JSON.stringify(validRequests));
+  }
+
+  static resetRequests(): void {
+    this.safeRemoveItem(this.STORAGE_KEY);
   }
 }
