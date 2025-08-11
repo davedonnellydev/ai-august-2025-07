@@ -1,11 +1,11 @@
-# Project [00] #AIAugustAppADay: [Project name]
+# Project 07 #AIAugustAppADay: Movie Recommendation App
 
-![Last Commit](https://img.shields.io/github/last-commit/davedonnellydev/ai-august-2025-XX)
+![Last Commit](https://img.shields.io/github/last-commit/davedonnellydev/ai-august-2025-07)
 
-**📆 Date**: XX/Aug/2025
-**🎯 Project Objective**: *[Write up any project objectives here]*
-**🚀 Features**: *[Main features for MVP]*
-**🛠️ Tech used**: *[Main tech used, including links to libraries/APIs]*
+**📆 Date**: 11/Aug/2025
+**🎯 Project Objective**: Get AI-powered movie recommendations by genre, mood, or prompt.
+**🚀 Features**: Search by genre, mood, prompt; Get AI recommendations; Show movie posters/info. Stretch goals: two or more people start same session, get shown a selection of movies and all pick which ones they'd be willing to watch, then the app shows them their common picks
+**🛠️ Tech used**: Next.js, TypeScript, OpenAI API, OMDb API ([https://www.omdbapi.com/](https://www.omdbapi.com/))
 **▶️ Live Demo**: *[https://your-demo-url.com](https://your-demo-url.com)*
 *(Link will be added after deployment)*
 
@@ -24,15 +24,15 @@ This project has been built as part of my AI August App-A-Day Challenge. You can
 
 ## 🧪 Testing
 
-![CI](https://github.com/davedonnellydev/ai-august-2025-XX/actions/workflows/npm_test.yml/badge.svg)
+![CI](https://github.com/davedonnellydev/ai-august-2025-07/actions/workflows/npm_test.yml/badge.svg)
 *Note: Test suite runs automatically with each push/merge.*
 
 ## Quick Start
 
 1. **Clone and install:**
    ```bash
-   git clone https://github.com/davedonnellydev/ai-august-2025-XX.git
-   cd ai-august-2025-XX
+   git clone https://github.com/davedonnellydev/ai-august-2025-07.git
+   cd ai-august-2025-07
    npm install
    ```
 
@@ -97,23 +97,17 @@ import { Component } from '@/components/Component'; // instead of '../../../comp
 
 - `npm run typecheck` – checks TypeScript types
 - `npm run lint` – runs ESLint
-- `npm run prettier:check` – checks files with Prettier
 - `npm run jest` – runs jest tests
 - `npm run jest:watch` – starts jest watch
 - `npm test` – runs `prettier:check`, `lint`, `typecheck` and `jest`
 
 ### Other scripts
 
-- `npm run storybook` – starts Storybook
-- `npm run storybook:build` – builds Storybook to `storybook-static`
+- `npm run prettier:check` – checks files with Prettier
 - `npm run prettier:write` – formats files with Prettier
 
 
+
 ## 📜 License
-![GitHub License](https://img.shields.io/github/license/davedonnellydev/ai-august-2025-XX)
+![GitHub License](https://img.shields.io/github/license/davedonnellydev/ai-august-2025-07)
 This project is licensed under the MIT License.
-
-
-## Mantine Next.js template
-
-This is a template based off the [Mantine Next.js template](https://github.com/mantinedev/next-app-template).
