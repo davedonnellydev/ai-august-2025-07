@@ -1,0 +1,83 @@
+.movieCard {
+  transition: all 0.2s ease-in-out;
+  height: 100%;
+}
+
+.movieCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.movieCard:hover .moviePoster {
+  filter: brightness(1.1);
+}
+
+.moviePoster {
+  transition: filter 0.2s ease-in-out;
+}
+
+.movieTitle {
+  min-height: 3rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.moviePlot {
+  min-height: 4rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ratingGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.genreBadge {
+  transition: all 0.2s ease-in-out;
+}
+
+.genreBadge:hover {
+  transform: scale(1.05);
+}
+
+.drawerContent {
+  padding: 1rem;
+}
+
+.posterContainer {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.detailCard {
+  background: #f8f9fa;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.detailCard:hover {
+  background: #e9ecef;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .movieCard {
+    margin-bottom: 1rem;
+  }
+
+  .drawerContent {
+    padding: 0.5rem;
+  }
+
+  .posterContainer {
+    padding: 0.5rem;
+  }
+}
