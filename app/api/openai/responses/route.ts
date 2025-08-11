@@ -17,10 +17,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { input } = await request.json();
+    const { searchOptions } = await request.json();
 
     // Enhanced validation
-    const textValidation = InputValidator.validateText(input, 2000);
+    const textValidation = InputValidator.validateText(searchOptions.description, 2000);
     if (!textValidation.isValid) {
       return NextResponse.json({ error: textValidation.error }, { status: 400 });
     }
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
 
     // Enhanced content moderation
     const moderatedText = await client.moderations.create({
-      input,
+        input: searchOptions.description,
     });
 
     const { flagged, categories } = moderatedText.results[0];
@@ -59,13 +59,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
+
+
+
     const instructions: string =
-      'You are a helpful assistant who knows general knowledge about the world. Keep your responses to one or two sentances, maximum.';
+      'You are a movie recommendations application with a database of all movies on IMDb. Your role is to interpret the options given by the user and return a list of movie titles and release years matching their search options';
+
+      let userInput: string = ''
+
+      if(searchOptions.categories.length > 0) {
+        userInput += `I'm looking for movies that match the following genres: ${searchOptions.genres.join(", ")}. `
+      }
+
+      if(searchOptions.categories.length > 0) {
+        userInput += `Ensure the movie selections fall under the following categories: ${searchOptions.categories.join(", ")}. `
+      }
+
+      if(searchOptions.description) {
+        userInput += `${searchOptions.description}`
+     }
+
 
     const response = await client.responses.create({
       model: MODEL,
       instructions,
-      input,
+      input: userInput,
     });
 
     if (response.status !== 'completed') {
@@ -74,7 +92,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       response: response.output_text || 'Response recieved',
-      originalInput: input,
+      originalInput: searchOptions,
       remainingRequests: ServerRateLimiter.getRemaining(ip),
     });
   } catch (error) {
