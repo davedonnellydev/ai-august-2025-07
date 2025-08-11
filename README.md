@@ -2,30 +2,30 @@
 
 ![Last Commit](https://img.shields.io/github/last-commit/davedonnellydev/ai-august-2025-07)
 
-**📆 Date**: 11/Aug/2025
-**🎯 Project Objective**: Get AI-powered movie recommendations by genre, mood, or prompt.
-**🚀 Features**: Search by genre, mood, prompt; Get AI recommendations; Show movie posters/info. Stretch goals: two or more people start same session, get shown a selection of movies and all pick which ones they'd be willing to watch, then the app shows them their common picks
-**🛠️ Tech used**: Next.js, TypeScript, OpenAI API, OMDb API ([https://www.omdbapi.com/](https://www.omdbapi.com/))
-**▶️ Live Demo**: *[https://your-demo-url.com](https://your-demo-url.com)*
-*(Link will be added after deployment)*
+**📆 Date**: 11/Aug/2025  
+**🎯 Project Objective**: Get AI-powered movie recommendations by genre, mood, or prompt.  
+**🚀 Features**: Search by genre, mood, prompt; Get AI recommendations; Show movie posters/info. Stretch goals: two or more people start same session, get shown a selection of movies and all pick which ones they'd be willing to watch, then the app shows them their common picks  
+**🛠️ Tech used**: Next.js, TypeScript, OpenAI API, OMDb API ([https://www.omdbapi.com/](https://www.omdbapi.com/))  
+**▶️ Live Demo**: *[https://your-demo-url.com](https://your-demo-url.com)*  
+*(Link will be added after deployment)*  
 
 ## 🗒️ Summary
-**Lessons learned**
-*A little summary of learnings*
+**Lessons learned**  
+*A little summary of learnings*  
 
-**Blockers**
-*Note any blockers here*
+**Blockers**  
+*Note any blockers here*  
 
-**Final thoughts**
-*Any final thoughts here*
+**Final thoughts**  
+*Any final thoughts here*  
 
 
-This project has been built as part of my AI August App-A-Day Challenge. You can read more information on the full project here: [https://github.com/davedonnellydev/ai-august-2025-challenge](https://github.com/davedonnellydev/ai-august-2025-challenge).
+This project has been built as part of my AI August App-A-Day Challenge. You can read more information on the full project here: [https://github.com/davedonnellydev/ai-august-2025-challenge](https://github.com/davedonnellydev/ai-august-2025-challenge).  
 
 ## 🧪 Testing
 
-![CI](https://github.com/davedonnellydev/ai-august-2025-07/actions/workflows/npm_test.yml/badge.svg)
-*Note: Test suite runs automatically with each push/merge.*
+![CI](https://github.com/davedonnellydev/ai-august-2025-07/actions/workflows/npm_test.yml/badge.svg)  
+*Note: Test suite runs automatically with each push/merge.*  
 
 ## Quick Start
 
@@ -109,5 +109,5 @@ import { Component } from '@/components/Component'; // instead of '../../../comp
 
 
 ## 📜 License
-![GitHub License](https://img.shields.io/github/license/davedonnellydev/ai-august-2025-07)
-This project is licensed under the MIT License.
+![GitHub License](https://img.shields.io/github/license/davedonnellydev/ai-august-2025-07)  
+This project is licensed under the MIT License.  
